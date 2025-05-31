@@ -66,6 +66,6 @@ export async function modelPredict(
   );
   return {
     state: maxIndex,
-    scores: [...scores],
+    scores: [...scores] as [number, number, number],
   };
 }

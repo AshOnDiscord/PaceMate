@@ -19,8 +19,10 @@ browser.runtime.onMessage.addListener((message, sender) => {
         console.log(
           "Model response:",
           stateMap[json.state],
-          stateMap[Math.round(json.avg)],
-          json.scores
+          stateMap[Math.round(json.avgResult)],
+          json.scores,
+          json.avg,
+          json.avgResult
         );
       })
       .catch((err) => console.error("Fetch error:", err));
