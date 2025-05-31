@@ -148,7 +148,7 @@ export default function Home() {
 
   return (
     <div
-      className={`grid place-content-center gap-8 py-16 min-h-screen transition transition-500 ${
+      className={`grid place-content-center gap-8 py-16 px-24 min-h-screen transition transition-500 ${
         phase === "Work" ? "bg-black text-white" : "bg-white text-black"
       }`}
     >
