@@ -10,13 +10,29 @@ Bun.serve({
         const json = await req.json();
         console.log("Received data:", json);
         const result = await runModel(json as ProductivityData);
-        console.log("Model result:", result);
-        return new Response(JSON.stringify(result), {
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
+        predictionQueue.push(result.state);
+        while (predictionQueue.length > 20) {
+          predictionQueue.shift(); // Keep the queue size manageable
+        }
+        const avg =
+          predictionQueue.reduce((acc, state) => acc + state, 0) /
+          predictionQueue.length;
+        console.log("Model result:", {
+          ...result,
+          avg,
         });
+        return new Response(
+          JSON.stringify({
+            ...result,
+            avg,
+          }),
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+          }
+        );
       },
       OPTIONS: () => {
         return new Response(null, {
@@ -34,13 +50,15 @@ Bun.serve({
 const model = createModel();
 trainModel(model);
 
+const predictionQueue: ProductivityState[] = [];
+
 async function runModel(data: ProductivityData) {
   // Implement your ML model logic here (e.g., simple thresholding, or load trained weights)
   // Example dummy prediction:
   // if (data.wpm > 40) return { state: "Productive" };
   // if (data.wpm > 10) return { state: "Regular" };
   // return { state: "Distracted" };
-  // return modelPredict(model, data);
+  return modelPredict(model, data);
   // const currentState = ProductivityState.Distracted;
   // // add data to training set
   // await appendFile(
