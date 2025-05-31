@@ -1,0 +1,19 @@
+{
+  "name": "code",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "ml-cart": "^2.1.1"
+  },
+  "trustedDependencies": [
+    "core-js"
+  ]
+}
