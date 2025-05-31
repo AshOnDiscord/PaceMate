@@ -11,6 +11,10 @@ export interface ProductivityData {
   applicationChangeCount: number; // app/tab changes in the last minute
 }
 
+export interface ExtraData {
+  activeWebsite: string; // Active website URL
+}
+
 // Map labels to numbers
 export enum ProductivityState {
   Productive = 0,

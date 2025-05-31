@@ -23,7 +23,16 @@ browser.runtime.onMessage.addListener((message, sender) => {
 });
 
 // 🧮 Periodic calculation (moving window of 60s)
+let currentHostname;
 setInterval(async () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs[0];
+    if (tab && tab.url) {
+      const url = new URL(tab.url);
+      const hostname = url.hostname;
+      currentHostname = hostname;
+    }
+  });
   const now = Date.now();
   const windowSize = 5 * 1000; // 20 seconds
   const threshold = now - windowSize;
@@ -57,6 +66,7 @@ setInterval(async () => {
     mouseEventsPerMinute,
     idleSeconds,
     applicationChangeCount: 0, // Placeholder for application change count
+    activeWebsite: currentHostname,
   };
 
   // console.log(data);
@@ -69,7 +79,7 @@ setInterval(async () => {
 }, 1000); // update every second
 
 const getStatus = async (data) => {
-  fetch("http://localhost:3000/data", {
+  fetch("http://localhost:3001/data", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -84,7 +94,8 @@ const getStatus = async (data) => {
         stateMap[Math.round(json.avgResult)],
         json.scores,
         json.avg,
-        json.avgResult
+        json.avgResult,
+        `current: ${data.activeWebsite}`
       );
     })
     .catch((err) => console.error("Fetch error:", err));

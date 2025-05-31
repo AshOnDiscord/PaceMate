@@ -3,7 +3,8 @@
   "name": "Productivity State Detector",
   "version": "1.0",
   "description": "Detect productivity state silently.",
-  "permissions": ["activeTab", "storage"],
+  "permissions": ["activeTab", "storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "scripts": ["background.js"],
     "persistent": false

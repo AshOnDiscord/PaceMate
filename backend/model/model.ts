@@ -59,11 +59,11 @@ export async function modelPredict(
   const prediction = model.predict(inputTensor) as tf.Tensor;
   const scores = prediction.dataSync();
   const maxIndex = scores.indexOf(Math.max(...scores));
-  console.log(
-    `Prediction: ${labelMapInverse[maxIndex]} (scores: ${[...scores].map((v) =>
-      v.toFixed(3)
-    )})`
-  );
+  // console.log(
+  //   `Prediction: ${labelMapInverse[maxIndex]} (scores: ${[...scores].map((v) =>
+  //     v.toFixed(3)
+  //   )})`
+  // );
   return {
     state: maxIndex,
     scores: [...scores] as [number, number, number],
