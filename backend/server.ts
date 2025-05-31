@@ -1,6 +1,9 @@
-import { ProductivityState, type ProductivityData } from "../types";
-import { appendFile } from "node:fs/promises";
-import { createModel, modelPredict, trainModel } from "./model";
+import { type ProductivityData } from "../types";
+import { createModel, modelPredict, trainModel } from "./model/model";
+import { update } from "./timer/pomodoro";
+
+const model = createModel();
+await trainModel(model);
 
 Bun.serve({
   port: 3000,
@@ -57,29 +60,24 @@ Bun.serve({
   },
 });
 
-const model = createModel();
-trainModel(model);
-
 const predictionQueue: [number, number, number][] = [];
 
 async function runModel(data: ProductivityData): Promise<{
   state: number;
   scores: [number, number, number];
 }> {
-  // Implement your ML model logic here (e.g., simple thresholding, or load trained weights)
-  // Example dummy prediction:
-  // if (data.wpm > 40) return { state: "Productive" };
-  // if (data.wpm > 10) return { state: "Regular" };
-  // return { state: "Distracted" };
   return modelPredict(model, data);
-  // const currentState = ProductivityState.Distracted;
-  // // add data to training set
-  // await appendFile(
-  //   "distracted.json",
-  //   JSON.stringify({ features: data, label: currentState }) + "\n"
-  // );
-  return {
-    state: 2,
-    scores: [0, 0, 1],
-  };
 }
+
+setInterval(() => {
+  const avg = predictionQueue
+    .reduce(
+      (acc, state) => {
+        return [acc[0] + state[0], acc[1] + state[1], acc[2] + state[2]];
+      },
+      [0, 0, 0]
+    )
+    .map((v) => v / predictionQueue.length);
+  const state = avg.indexOf(Math.max(...avg));
+  update(state);
+}, 1000); // Update every second

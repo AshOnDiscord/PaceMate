@@ -1,4 +1,4 @@
-import { labelMapInverse, ProductivityState } from "../types";
+import { labelMapInverse, ProductivityState } from "../../types";
 import { createModel, modelPredict, trainModel } from "./model";
 
 const model = createModel();

@@ -1,4 +1,4 @@
-import { ProductivityState, type ProductivityData } from "../types";
+import { ProductivityState, type ProductivityData } from "../../types";
 
 export const getData = async (
   file: string
