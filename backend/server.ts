@@ -2,6 +2,8 @@ import { ProductivityState, type ProductivityData } from "../types";
 import { appendFile } from "node:fs/promises";
 import { createModel, modelPredict, trainModel } from "./model";
 
+let queue: ProductivityData[] = [];
+
 Bun.serve({
   port: 3000,
   routes: {
@@ -10,7 +12,14 @@ Bun.serve({
         const json = await req.json();
         console.log("Received data:", json);
         const result = await runModel(json as ProductivityData);
-        console.log("Model result:", result);
+        if (result.state === -1) {
+          console.log(
+            "Not enough data to make a prediction yet.",
+            queue.length
+          );
+        } else {
+          console.log("Model result:", result);
+        }
         return new Response(JSON.stringify(result), {
           headers: {
             "Content-Type": "application/json",
@@ -39,6 +48,7 @@ async function runModel(data: ProductivityData) {
   // Example dummy prediction:
   // if (data.wpm > 40) return { state: "Productive" };
   // if (data.wpm > 10) return { state: "Regular" };
+  // return { state: -1 };
   // return { state: "Distracted" };
   // return modelPredict(model, data);
   // const currentState = ProductivityState.Distracted;
@@ -47,7 +57,17 @@ async function runModel(data: ProductivityData) {
   //   "distracted.json",
   //   JSON.stringify({ features: data, label: currentState }) + "\n"
   // );
+  queue.push(data);
+  if (queue.length >= 20) {
+    while (queue.length > 20) queue.shift(); // keep only the last 60 frames to reduce memory usage
+    const prediction = await modelPredict(model, queue);
+    return {
+      state: prediction.state,
+      scores: prediction.scores, // assuming modelPredict returns scores
+    };
+  }
+
   return {
-    state: 2,
+    state: -1,
   };
 }

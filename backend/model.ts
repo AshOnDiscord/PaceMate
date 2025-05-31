@@ -1,20 +1,53 @@
 import * as tf from "@tensorflow/tfjs-node";
 import TrainingData from "./trainingData";
-import { labelMapInverse, type ProductivityData } from "../types";
+import {
+  labelMapInverse,
+  ProductivityState,
+  type ProductivityData,
+} from "../types";
 
 export const createModel = (): tf.LayersModel => {
   const model = tf.sequential();
   model.add(
-    tf.layers.dense({ inputShape: [5], units: 16, activation: "relu" })
+    tf.layers.conv1d({
+      inputShape: [
+        20,
+        (
+          [
+            "applicationChangeCount",
+            "idleSeconds",
+            "keystrokesPerMinute",
+            "mouseEventsPerMinute",
+            "wpm",
+          ] as (keyof ProductivityData)[]
+        ).length,
+      ],
+      filters: 32,
+      kernelSize: 3,
+      activation: "relu",
+    })
   );
-  model.add(tf.layers.dropout({ rate: 0.2 }));
-  model.add(tf.layers.dense({ units: 12, activation: "relu" }));
-  model.add(tf.layers.dropout({ rate: 0.2 }));
-  model.add(tf.layers.dense({ units: 3, activation: "softmax" }));
+
+  model.add(tf.layers.maxPooling1d({ poolSize: 2 }));
+  model.add(tf.layers.dropout({ rate: 0.3 }));
+
+  model.add(
+    tf.layers.conv1d({
+      filters: 64,
+      kernelSize: 3,
+      activation: "relu",
+    })
+  );
+
+  model.add(tf.layers.flatten());
+  model.add(tf.layers.dropout({ rate: 0.3 }));
+  model.add(tf.layers.dense({ units: 64, activation: "relu" }));
+  model.add(tf.layers.dropout({ rate: 0.3 }));
+  model.add(tf.layers.dense({ units: 3, activation: "softmax" })); // 3 classes
 
   model.compile({
-    optimizer: tf.train.adam(0.01),
-    loss: "sparseCategoricalCrossentropy",
+    loss: "categoricalCrossentropy",
+    optimizer: "adam",
     metrics: ["accuracy"],
   });
 
@@ -22,22 +55,37 @@ export const createModel = (): tf.LayersModel => {
 };
 
 export const trainModel = async (model: tf.LayersModel) => {
-  const trainingFeatures = TrainingData.map((s) => [
-    s.features.wpm,
-    s.features.keystrokesPerMinute,
-    s.features.mouseEventsPerMinute,
-    s.features.idleSeconds,
-    s.features.applicationChangeCount,
-  ]);
-  const trainingLabels = TrainingData.map((s) => s.label);
+  const trainingFeatures = TrainingData.map((chunk) =>
+    chunk.map((s) => [
+      s.features.wpm,
+      s.features.keystrokesPerMinute,
+      s.features.mouseEventsPerMinute,
+      s.features.idleSeconds,
+      s.features.applicationChangeCount,
+    ])
+  );
+  const trainingLabels = TrainingData.map((chunk) => {
+    const counts = [0, 0, 0]; // [prod, reg, distracted]
+    for (const frame of chunk) counts[frame.label]!++;
+    const majorityLabel = counts.indexOf(Math.max(...counts));
+    return tf.oneHot(majorityLabel, 3);
+  });
 
-  const trainingData = tf.tensor2d(trainingFeatures);
-  const labels = tf.tensor1d(trainingLabels, "float32");
+  const labelCounts = [0, 0, 0];
+  TrainingData.forEach((chunk) => {
+    chunk.forEach((frame) => {
+      labelCounts[frame.label]!++;
+    });
+  });
+  console.log("Label distribution:", labelCounts);
 
-  await model.fit(trainingData, labels, {
-    epochs: 100,
+  const featureTensor = tf.tensor3d(trainingFeatures); // shape: [batch, 60, 5]
+  const labelTensor = tf.stack(trainingLabels); // shape: [batch, 3]
+  await model.fit(featureTensor, labelTensor, {
+    epochs: 30,
     shuffle: true,
-    verbose: 0,
+    batchSize: 16,
+    verbose: 1,
   });
 
   return model;
@@ -45,17 +93,19 @@ export const trainModel = async (model: tf.LayersModel) => {
 
 export async function modelPredict(
   model: tf.LayersModel,
-  input: ProductivityData
+  input: ProductivityData[]
 ) {
-  const inputTensor = tf.tensor2d([
-    [
-      input.wpm,
-      input.keystrokesPerMinute,
-      input.mouseEventsPerMinute,
-      input.idleSeconds,
-      input.applicationChangeCount,
-    ],
-  ]);
+  if (input.length !== 20) throw new Error("Window must be exactly 60 frames");
+  const inputTensor = tf.tensor3d([
+    input.map((frame) => [
+      frame.wpm,
+      frame.keystrokesPerMinute,
+      frame.mouseEventsPerMinute,
+      frame.idleSeconds,
+      frame.applicationChangeCount,
+    ]),
+  ]); // shape: [1, 60, 5]
+
   const prediction = model.predict(inputTensor) as tf.Tensor;
   const scores = prediction.dataSync();
   const maxIndex = scores.indexOf(Math.max(...scores));

@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@tensorflow/tfjs-node": "^4.22.0",
-    "ml-cart": "^2.1.1"
+    "ml-cart": "^2.1.1",
+    "ts-transformer-keys": "^0.4.4"
   },
   "trustedDependencies": [
     "core-js"

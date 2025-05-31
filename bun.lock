@@ -6,6 +6,7 @@
       "dependencies": {
         "@tensorflow/tfjs-node": "^4.22.0",
         "ml-cart": "^2.1.1",
+        "ts-transformer-keys": "^0.4.4",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -244,6 +245,8 @@
     "tar": ["tar@6.2.1", "", { "dependencies": { "chownr": "^2.0.0", "fs-minipass": "^2.0.0", "minipass": "^5.0.0", "minizlib": "^2.1.1", "mkdirp": "^1.0.3", "yallist": "^4.0.0" } }, "sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A=="],
 
     "tr46": ["tr46@0.0.3", "", {}, "sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw=="],
+
+    "ts-transformer-keys": ["ts-transformer-keys@0.4.4", "", { "peerDependencies": { "typescript": ">=2.4.1" } }, "sha512-LrqgvaFvar01/5mbunRyeLTSIkqoC2xfcpL/90aDY6vR07DGyH+UaYGdIEsUudnlAw2Sr0pxFgdZvE0QIyI4qA=="],
 
     "typescript": ["typescript@5.8.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ=="],
 
