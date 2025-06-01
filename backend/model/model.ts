@@ -1,6 +1,6 @@
 import * as tf from "@tensorflow/tfjs-node";
 import TrainingData from "./trainingData.ts";
-import { labelMapInverse, type ProductivityData } from "../../types";
+import { type ProductivityData } from "../../types";
 
 export const createModel = (): tf.LayersModel => {
   const model = tf.sequential();
